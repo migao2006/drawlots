@@ -1,19 +1,107 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>抽籤網頁</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather Forecast</title>
+  <script defer src="script.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to bottom, #4facfe, #00f2fe);
+      color: #fff;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .current-weather {
+      margin-top: 50px;
+    }
+
+    .forecast {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px;
+      margin-top: 30px;
+    }
+
+    .forecast-item {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      padding: 10px;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>抽籤遊戲</h1>
-        <p>輸入選項並點擊「開始抽籤」！</p>
-        <textarea id="options" placeholder="每行輸入一個選項"></textarea>
-        <button id="drawButton">開始抽籤</button>
-        <div id="result"></div>
+  <div class="container">
+    <h1>Local Weather Forecast</h1>
+    <div class="current-weather">
+      <h2>Current Weather</h2>
+      <p id="current-temp">Loading...</p>
+      <p id="condition"></p>
     </div>
-    <script src="script.js"></script>
+    <div class="forecast">
+      <h2>7-Day Forecast</h2>
+      <div id="forecast">
+        <!-- Forecast data will be displayed here -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_KEY = 'bd94b2da17660aae47c3b556f2483402';
+
+    async function getWeatherData(lat, lon) {
+      const url = `https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${lat},${lon}&days=7&aqi=no&alerts=no`;
+      const response = await fetch(url);
+      const data = await response.json();
+      return data;
+    }
+
+    function getLocationAndWeather() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(async (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          const weatherData = await getWeatherData(lat, lon);
+          console.log(weatherData); // For debugging
+          displayWeather(weatherData);
+        });
+      } else {
+        alert('Unable to access your location. Please enable location services.');
+      }
+    }
+
+    function displayWeather(data) {
+      const current = data.current;
+      const forecast = data.forecast.forecastday;
+
+      document.getElementById('current-temp').innerText = `${current.temp_c}°C`;
+      document.getElementById('condition').innerText = current.condition.text;
+
+      // Display 7-day forecast
+      let forecastHTML = '';
+      forecast.forEach((day) => {
+        forecastHTML += `
+          <div class="forecast-item">
+            <p>${day.date}</p>
+            <p>${day.day.avgtemp_c}°C</p>
+            <p>${day.day.condition.text}</p>
+          </div>
+        `;
+      });
+      document.getElementById('forecast').innerHTML = forecastHTML;
+    }
+
+    // Initialize
+    getLocationAndWeather();
+  </script>
 </body>
 </html>
